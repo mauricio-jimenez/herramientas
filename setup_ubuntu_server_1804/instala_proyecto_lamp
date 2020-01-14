@@ -9,7 +9,7 @@ sudo apt install apache2
 # firewall
 sudo ufw allow OpenSSH
 sudo ufw allow in "Apache Full"
-ufw enable
+sudo ufw enable
 # instalar mysql
 sudo apt install mysql-server
 sudo mysql_secure_installation
@@ -69,6 +69,8 @@ sudo chmod g+s /var/www
 #	For file chmod u+rw,g+r-xw,o-rwx
 #	For directory chmod u+rwx,g+rx-w,o-rxw
 #	Now, user pi can manipulate files on /var/www and httpd can read, but not write.
+#
+# Escrito por pksato en https://www.raspberrypi.org/forums/viewtopic.php?t=155067
 
 echo "Nombre del proyecto en Github?"
 read $proyecto
