@@ -1,0 +1,14 @@
+#!/bin/bash
+# Crea usuario normal con la misma ssh key
+
+echo "Nombre del usuario?
+read usuario
+
+# crea usuario
+adduser ${usuario}
+# concederle privilegios de root
+usermod -aG sudo ${usuario}
+# compartir la ssh key
+rsync --archive --chown=${usuario}:${usuario} ~/.ssh /home/${usuario}
+if $?; then echo "Usuario creado con exito. Ahora intenta entrar como ese usuario."; fi
+exit 0

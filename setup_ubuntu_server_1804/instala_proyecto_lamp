@@ -1,0 +1,111 @@
+#!/bin/bash
+# Instala proyecto laravel
+
+# preparacion
+sudo apt update
+sudo apt upgrade
+# instalar apache
+sudo apt install apache2
+# firewall
+sudo ufw allow OpenSSH
+sudo ufw allow in "Apache Full"
+ufw enable
+# instalar mysql
+sudo apt install mysql-server
+sudo mysql_secure_installation
+
+# que root use password para entrar y no socket
+#echo ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';FLUSH PRIVILEGES;\q"|sudo mysql
+
+# instalar php
+sudo apt install php libapache2-mod-php php-mysql
+# instalar git
+sudo apt install git
+# instalar composer
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php -r "if (hash_file('sha384', 'composer-setup.php') === 'c5b9b6d368201a9db6f74e2611495f369991b72d9c8cbd3ffbc63edff210eb73d46ffbfce88669ad33695ef77dc76976') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
+mv composer.phar /usr/local/bin/composer
+# agregar extensiones para laravel
+sudo apt install php-mbstring php-xml php-bcmath
+
+# instalar laravel?? no creo...
+
+# dialogo
+echo "Nombre de la base de datos?"
+read db_nombre
+echo "Nombre de usuario de base de datos? (no lo pierdas)"
+read db_usuario
+echo "Contraseña de usuario de base de datos? (no lo pierdas)"
+read db_password
+
+crea_db="create database $db_nombre;"
+crea_usuario_db="GRANT ALL ON ${db_nombre}.* TO '${db_usuario}'@'localhost' IDENTIFIED BY '${db_password}' WITH GRANT OPTION;"
+
+# crea base de datos
+echo "$crea_db $crea_usuario_db \q" | sudo mysql
+
+
+# Configurar chown y chmod en /var/www. En realidad en el project folder clonado/por-clonar.
+sudo chown -R mauricio:www-data /var/www
+sudo chmod -R u+rxw,g+rx-w,o-rwx /var/www
+sudo chmod g+s /var/www
+
+# JUSTIFICACION
+
+#	On normal situation, http daemon run as some user and group, www-data on debian (raspbian).
+#	Standard html files are stored on /var/www/, owned by root:root, with permissive permission,
+#	all can read, but only root can write.
+#	To ordinary user write to /var/www need to takeover it. Supposed the use is pi.
+#	sudo chown -R pi:www-data /var/www
+#	Also, need to set user and group permission:
+#	sudo chmod u+rxw,g+rx-w,o-rwx /var/www
+#	Now, /var/www can be read,write and chdir by user pi, group www-data can chdir and read.
+#	Other not have access.
+#	sudo chmod g+s /var/www
+#	Any new file created on /var/www belong to group www-data.
+#	If have files on /var/www, change user and group, and allow to group www-data read.
+#	For file chmod u+rw,g+r-xw,o-rwx
+#	For directory chmod u+rwx,g+rx-w,o-rxw
+#	Now, user pi can manipulate files on /var/www and httpd can read, but not write.
+
+echo "Nombre del proyecto en Github?"
+read $proyecto
+
+# clonar proyecto desde github
+cd /var/www/
+git clone https://github.com/mauricio-jimenez/${proyecto}.git
+
+if $?; then echo "El Proyecto ha sido clonado con exito.";
+else
+	echo "No se pudo clonar el proyecto. Abortando..."
+	exit 1;
+fi
+
+# Directories within the storage and the bootstrap/cache directories should be writable
+# by your web server or Laravel will not run.
+sudo chmod g+w /var/www/${proyecto}/storage
+sudo chmod g+w /var/www/${proyecto}/bootstrap/cache
+
+# crear virtual host
+if [ -e vh-laravel.conf ];
+	then
+ 	echo "Existe archivo base para virtual host! moviendolo...";
+	# web/document root debe ser el public de laravel
+	echo "Hay que cambiar el document root";
+	sudo mv vh-laravel.conf /etc/apache2/sites-available/vh-laravel.conf
+
+else
+	echo "Error al crear virtual host: falta el archivo vh-laravel.conf";
+	exit 1
+fi
+
+# be sure to enable the mod_rewrite module so the .htaccess file will be honored by the server.
+sudo a2enmod rewrite
+# enable vh-laravel.conf
+sudo a2ensite vh-laravel.conf
+# disable 000-default.conf
+sudo a2dissite 000-default.conf
+# restart apache
+sudo systemctl restart apache2
