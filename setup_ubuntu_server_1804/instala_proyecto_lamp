@@ -30,7 +30,8 @@ mv composer.phar /usr/local/bin/composer
 # agregar extensiones para laravel
 sudo apt install php-mbstring php-xml php-bcmath
 
-# instalar laravel?? no creo...
+# agregar extensiones para laravel-excel
+sudo apt install php-gd php-zip
 
 # dialogo
 echo "Nombre de la base de datos?"
@@ -85,19 +86,30 @@ else
 	exit 1;
 fi
 
+# instalar el proyecto
+cd $proyecto
+composer install
+if $?; then echo "Proyecto instalado.";
+else
+	echo "Error al instalar el proyecto."
+	exit 1;
+fi
+
 # Directories within the storage and the bootstrap/cache directories should be writable
 # by your web server or Laravel will not run.
 sudo chmod g+w /var/www/${proyecto}/storage
 sudo chmod g+w /var/www/${proyecto}/bootstrap/cache
 
 # crear virtual host
+cd ~/herramientas/setup_ubuntu_server_1804
 if [ -e vh-laravel.conf ];
 	then
- 	echo "Existe archivo base para virtual host! moviendolo...";
+ 	echo -e "Existe archivo base para virtual host.\n"
+	echo -e "Actualizando nombre del proyecto\n"
+	sed -i -e s/laravel/${proyecto}/g vh-laravel.conf
 	# web/document root debe ser el public de laravel
-	echo "Hay que cambiar el document root";
+	echo -e "Posicionando archivo virtual host...\n";
 	sudo mv vh-laravel.conf /etc/apache2/sites-available/vh-laravel.conf
-
 else
 	echo "Error al crear virtual host: falta el archivo vh-laravel.conf";
 	exit 1
@@ -111,3 +123,6 @@ sudo a2ensite vh-laravel.conf
 sudo a2dissite 000-default.conf
 # restart apache
 sudo systemctl restart apache2
+
+echo "Listo!"
+exit 0
