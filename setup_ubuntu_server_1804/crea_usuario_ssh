@@ -1,10 +1,10 @@
 #!/bin/bash
 # Crea usuario normal con la misma ssh key
 
-echo "Nombre del usuario?
+echo "Nombre del usuario?"
 read usuario
 
-# crea usuario
+# crear usuario
 adduser ${usuario}
 # concederle privilegios de root
 usermod -aG sudo ${usuario}
