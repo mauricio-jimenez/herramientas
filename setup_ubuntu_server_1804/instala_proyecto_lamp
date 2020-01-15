@@ -1,58 +1,106 @@
 #!/bin/bash
 # Instala proyecto laravel
 
-# preparacion
-sudo apt update
-sudo apt upgrade
-# instalar apache
-sudo apt install apache2
-# firewall
-sudo ufw allow OpenSSH
-sudo ufw allow in "Apache Full"
-sudo ufw enable
-# instalar mysql
-sudo apt install mysql-server
-sudo mysql_secure_installation
+echo "Ingresa el nombre de la seccion de entrada al procedimiento: "
+read entrada
+
+case $entrada in 
+	
+	"inicio")
+		sudo apt update
+		sudo apt upgrade
+		echo "-------------------------------------------------------------------"
+		echo "Inicio listo. Siguiente: instalar apache"
+		;&
+
+	"instalar apache")
+		sudo apt install apache2
+		echo "-------------------------------------------------------------------"
+		echo "Apache instalado. Siguiente: setup firewall"
+		;&
+
+	"setup firewall")
+		sudo ufw allow OpenSSH
+		sudo ufw allow in "Apache Full"
+		sudo ufw enable
+		echo "-------------------------------------------------------------------"
+		echo "Setup firewall listo. Siguiente: instalar mysql"
+		;&
+
+	"instalar mysql")
+		sudo apt install mysql-server
+		sudo mysql_secure_installation
+		echo "-------------------------------------------------------------------"
+		echo "Mysql instalado. Siguiente: instalar php"
+		;&
 
 # que root use password para entrar y no socket
 #echo ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';FLUSH PRIVILEGES;\q"|sudo mysql
 
-# instalar php
-sudo apt install php libapache2-mod-php php-mysql
-# instalar git
-sudo apt install git
-# instalar composer
-php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-php -r "if (hash_file('sha384', 'composer-setup.php') === 'c5b9b6d368201a9db6f74e2611495f369991b72d9c8cbd3ffbc63edff210eb73d46ffbfce88669ad33695ef77dc76976') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-php composer-setup.php
-php -r "unlink('composer-setup.php');"
-sudo mv composer.phar /usr/local/bin/composer
-# agregar extensiones para laravel
-sudo apt install php-mbstring php-xml php-bcmath
+	"instalar php")
+		sudo apt install php libapache2-mod-php php-mysql
+		echo "-------------------------------------------------------------------"
+		echo "Php instalado. Siguiente: instalar git"
+		;&
 
-# agregar extensiones para laravel-excel
-sudo apt install php-gd php-zip
+	"instalar git")
+		sudo apt install git
+		echo "-------------------------------------------------------------------"
+		echo "git instalado. Siguiente: instalar composer"
+		;&
+	
+	"instalar composer")
+		php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+		php -r "if (hash_file('sha384', 'composer-setup.php') === 'c5b9b6d368201a9db6f74e2611495f369991b72d9c8cbd3ffbc63edff210eb73d46ffbfce88669ad33695ef77dc76976') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+		php composer-setup.php
+		php -r "unlink('composer-setup.php');"
+		sudo mv composer.phar /usr/local/bin/composer
+		echo "-------------------------------------------------------------------"
+		echo "Composer instalado. Siguiente extensiones laravel"
+		;&
 
-# dialogo
-echo "Nombre de la base de datos?"
-read db_nombre
-echo "Nombre de usuario de base de datos? (no lo pierdas)"
-read db_usuario
-echo "Contraseña de usuario de base de datos? (no lo pierdas)"
-read db_password
+	"extensiones laravel")
+		sudo apt install php-mbstring php-xml php-bcmath
+		echo "-------------------------------------------------------------------"
+		echo " Extensiones para laravel instaladas. Siguiente: extensiones excel"
+		;&
 
-crea_db="create database $db_nombre;"
-crea_usuario_db="CREATE USER '${db_usuario}'@'localhost' IDENTIFIED BY '${db_password}'; FLUSH PRIVILEGES;"
-crea_acceso_db="GRANT ALL ON ${db_nombre}.* TO '${db_usuario}'@'localhost'; FLUSH PRIVILEGES;"
+	"extensiones excel")
+		sudo apt install php-gd php-zip
+		echo "-------------------------------------------------------------------"
+		echo "Extensiones para laravel-excel instaladas. Siguiente: crear database"
+		;&
 
-# crea base de datos
-echo "$crea_db $crea_usuario_db $crea_acceso_db \q" | sudo mysql
+	"crear database")
+		echo "Nombre de la base de datos?"
+		read db_nombre
+		echo "Nombre de usuario de base de datos? (no lo pierdas)"
+		read db_usuario
+		echo "Contraseña de usuario de base de datos? (no lo pierdas)"
+		read db_password
 
+		crea_db="create database $db_nombre;"
+		crea_usuario_db="CREATE USER '${db_usuario}'@'localhost' IDENTIFIED BY '${db_password}'; FLUSH PRIVILEGES;"
+		crea_acceso_db="GRANT ALL ON ${db_nombre}.* TO '${db_usuario}'@'localhost'; FLUSH PRIVILEGES;"
 
-# Configurar chown y chmod en /var/www. En realidad en el project folder clonado/por-clonar.
-sudo chown -R mauricio:www-data /var/www
-sudo chmod -R u+rxw,g+rx-w,o-rwx /var/www
-sudo chmod g+s /var/www
+		echo "$crea_db $crea_usuario_db $crea_acceso_db \q" | sudo mysql
+
+		echo "-------------------------------------------------------------------"
+		if [ $? -eq 0 ]; then echo "Base de datos creada.";
+		else echo "Error al crear base de datos.";
+		fi
+
+		echo "Siguiente: permisos apache"
+		exit 1;
+		;&
+
+	"permisos apache")
+		sudo chown -R mauricio:www-data /var/www
+		sudo chmod -R u+rxw,g+rx-w,o-rwx /var/www
+		sudo chmod g+s /var/www
+		echo "-------------------------------------------------------------------"
+		echo "Permisos en /var/www listo. Siguiente: clonar proyecto"
+		;&
 
 # JUSTIFICACION
 
@@ -74,59 +122,74 @@ sudo chmod g+s /var/www
 #
 # Escrito por pksato en https://www.raspberrypi.org/forums/viewtopic.php?t=155067
 
-echo "Nombre del proyecto en Github?"
-read proyecto
+	"clonar proyecto")
+		echo "Nombre del proyecto en Github?"
+		read proyecto
 
-# clonar proyecto desde github
-cd /var/www/
-git clone https://github.com/mauricio-jimenez/${proyecto}.git
+		cd /var/www/
+		git clone https://github.com/mauricio-jimenez/${proyecto}.git
 
-if [ $? -eq 0 ]; then echo "El Proyecto ha sido clonado con exito.";
-else
-	echo "No se pudo clonar el proyecto. Abortando..."
-	exit 1;
-fi
+		echo "-------------------------------------------------------------------"
+		if [ $? -eq 0 ]; then echo "El Proyecto ha sido clonado con exito.";
+		else echo "No se pudo clonar el proyecto. Abortando..."; exit 1;
+		fi
+		echo "Siguiente: instalar proyecto"
+		;&
 
-# instalar el proyecto
-cd $proyecto
+	"instalar proyecto")
+		cd $proyecto
+		# unzip sirve para hacer correctamente el install que viene
+		sudo apt install unzip
+		composer install
+		
+		echo "-------------------------------------------------------------------"
+		if [ $? -eq 0 ]; then echo "Proyecto instalado.";
+		else echo "Error al instalar el proyecto."; exit 1;
+		fi
+		echo "Siguiente: escritura apache"
+		;&
 
-# unzip sirve para hacer correctamente el install que viene
-sudo apt install unzip
-composer install
-if [ $? -eq 0 ]; then echo "Proyecto instalado.";
-else
-	echo "Error al instalar el proyecto."
-	exit 1;
-fi
+	# Directories within the storage and the bootstrap/cache directories should be writable
+	# by your web server or Laravel will not run.
+	
+	"escritura apache")		
+		sudo chmod g+w /var/www/${proyecto}/storage
+		sudo chmod g+w /var/www/${proyecto}/bootstrap/cache
+		echo "-------------------------------------------------------------------"
+		echo "Requisitos de escritura en proyecto laravel listo. Siguiente: virtual host"
+		;&
 
-# Directories within the storage and the bootstrap/cache directories should be writable
-# by your web server or Laravel will not run.
-sudo chmod g+w /var/www/${proyecto}/storage
-sudo chmod g+w /var/www/${proyecto}/bootstrap/cache
+	"virtual host")
+		cd ~/herramientas/setup_ubuntu_server_1804
+		if [ -e vh-laravel.conf ];
+			then
+		 	echo -e "Existe archivo base para virtual host. Actualizando nombre del proyecto..."
+			sed -i -e s/laravel/${proyecto}/g vh-laravel.conf
+			
+			# web/document root debe ser el public de laravel
+			echo -e "Posicionando archivo virtual host...\n";
+			sudo mv vh-laravel.conf /etc/apache2/sites-available/vh-laravel.conf
+		else
+			echo "Error al crear virtual host: falta el archivo vh-laravel.conf";
+			exit 1
+		fi
 
-# crear virtual host
-cd ~/herramientas/setup_ubuntu_server_1804
-if [ -e vh-laravel.conf ];
-	then
- 	echo -e "Existe archivo base para virtual host.\n"
-	echo -e "Actualizando nombre del proyecto\n"
-	sed -i -e s/laravel/${proyecto}/g vh-laravel.conf
-	# web/document root debe ser el public de laravel
-	echo -e "Posicionando archivo virtual host...\n";
-	sudo mv vh-laravel.conf /etc/apache2/sites-available/vh-laravel.conf
-else
-	echo "Error al crear virtual host: falta el archivo vh-laravel.conf";
-	exit 1
-fi
+		echo "-------------------------------------------------------------------"
+		echo "creacion de virtual host listo. Siguiente: habilitar sitio"
+		;&
 
-# be sure to enable the mod_rewrite module so the .htaccess file will be honored by the server.
-sudo a2enmod rewrite
-# enable vh-laravel.conf
-sudo a2ensite vh-laravel.conf
-# disable 000-default.conf
-sudo a2dissite 000-default.conf
-# restart apache
-sudo systemctl restart apache2
-
-echo "Listo!"
-exit 0
+	"habilitar sitio")
+		# be sure to enable the mod_rewrite module so the .htaccess file will be honored by the server.
+		sudo a2enmod rewrite
+		sudo a2ensite vh-laravel.conf
+		sudo a2dissite 000-default.conf
+		sudo systemctl restart apache2
+		echo "-------------------------------------------------------------------"
+		echo "Sitio habilitado. Siguiente: crear .env, crear app key, poblar base de datos"
+		echo "Tambien seria bueno reiniciar el servidor."
+		;&
+	*)
+		echo "-------------------------------------------------------------------"
+		echo "Fin"
+		exit 0
+		;;
