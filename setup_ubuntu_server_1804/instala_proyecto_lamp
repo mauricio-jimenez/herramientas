@@ -87,11 +87,10 @@ case $entrada in
 
 		echo "-------------------------------------------------------------------"
 		if [ $? -eq 0 ]; then echo "Base de datos creada.";
-		else echo "Error al crear base de datos.";
+		else echo "Error al crear base de datos."; exit 1;
 		fi
 
 		echo "Siguiente: permisos apache"
-		exit 1;
 		;&
 
 	"permisos apache")
