@@ -10,8 +10,8 @@ adduser ${usuario}
 usermod -aG sudo ${usuario}
 # compartir la ssh key
 rsync --archive --chown=${usuario}:${usuario} ~/.ssh /home/${usuario}
-if $?; 
+if [ $? -eq 0 ]; 
         then echo "Usuario creado con exito. Ahora intenta entrar como ese usuario.";
-    else echo Error; 
+    else echo Error. No se pudo; 
 fi
 exit 0
