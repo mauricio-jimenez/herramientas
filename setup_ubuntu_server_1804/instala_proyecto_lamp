@@ -26,7 +26,7 @@ php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
 php -r "if (hash_file('sha384', 'composer-setup.php') === 'c5b9b6d368201a9db6f74e2611495f369991b72d9c8cbd3ffbc63edff210eb73d46ffbfce88669ad33695ef77dc76976') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
 php composer-setup.php
 php -r "unlink('composer-setup.php');"
-mv composer.phar /usr/local/bin/composer
+sudo mv composer.phar /usr/local/bin/composer
 # agregar extensiones para laravel
 sudo apt install php-mbstring php-xml php-bcmath
 
@@ -75,13 +75,13 @@ sudo chmod g+s /var/www
 # Escrito por pksato en https://www.raspberrypi.org/forums/viewtopic.php?t=155067
 
 echo "Nombre del proyecto en Github?"
-read $proyecto
+read proyecto
 
 # clonar proyecto desde github
 cd /var/www/
 git clone https://github.com/mauricio-jimenez/${proyecto}.git
 
-if $?; then echo "El Proyecto ha sido clonado con exito.";
+if [ $? -eq 0 ]; then echo "El Proyecto ha sido clonado con exito.";
 else
 	echo "No se pudo clonar el proyecto. Abortando..."
 	exit 1;
@@ -93,7 +93,7 @@ cd $proyecto
 # unzip sirve para hacer correctamente el install que viene
 sudo apt install unzip
 composer install
-if $?; then echo "Proyecto instalado.";
+if [ $? -eq 0 ]; then echo "Proyecto instalado.";
 else
 	echo "Error al instalar el proyecto."
 	exit 1;
