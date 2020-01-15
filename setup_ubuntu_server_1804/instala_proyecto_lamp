@@ -42,10 +42,11 @@ echo "Contraseña de usuario de base de datos? (no lo pierdas)"
 read db_password
 
 crea_db="create database $db_nombre;"
-crea_usuario_db="GRANT ALL ON ${db_nombre}.* TO '${db_usuario}'@'localhost' IDENTIFIED BY '${db_password}' WITH GRANT OPTION;"
+crea_usuario_db="CREATE USER '${db_usuario}'@'localhost' IDENTIFIED BY '${db_password}'; FLUSH PRIVILEGES;"
+crea_acceso_db="GRANT ALL ON ${db_nombre}.* TO '${db_usuario}'@'localhost'; FLUSH PRIVILEGES;"
 
 # crea base de datos
-echo "$crea_db $crea_usuario_db \q" | sudo mysql
+echo "$crea_db $crea_usuario_db $crea_acceso_db \q" | sudo mysql
 
 
 # Configurar chown y chmod en /var/www. En realidad en el project folder clonado/por-clonar.
@@ -88,6 +89,9 @@ fi
 
 # instalar el proyecto
 cd $proyecto
+
+# unzip sirve para hacer correctamente el install que viene
+sudo apt install unzip
 composer install
 if $?; then echo "Proyecto instalado.";
 else
