@@ -189,6 +189,8 @@ case $entrada in
 		;&
 	*)
 		echo "-------------------------------------------------------------------"
+		echo "Asi--php artisan key:generate--"
+		echo "Y asi--php artisan migrate:fresh --seed--"
 		echo "Fin"
 		exit 0
 		;;
